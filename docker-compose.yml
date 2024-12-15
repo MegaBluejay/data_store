@@ -1,0 +1,8 @@
+services:
+  postgres:
+    image: postgres:14.15-alpine
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
