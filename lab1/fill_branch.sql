@@ -59,8 +59,8 @@ insert into sales (buyer_id)
 select ceil(random() * 25)
 from generate_series(1, 25);
 
-insert into sale_items (sale_id, item_id, price)
-select ceil(random() * 25), ceil(random() * 25), ceil(random() * 100)
+insert into sale_items (sale_id, item_id, price, count)
+select ceil(random() * 25), ceil(random() * 25), ceil(random() * 100), ceil(random() * 100)
 from generate_series(1, 50);
 
 update sales set finalized_at = now()

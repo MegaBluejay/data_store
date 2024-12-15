@@ -87,6 +87,7 @@ create table sale_items (
     modified_at timestamptz not null default now(),
     sale_id bigint not null,
     item_id bigint not null,
+    count  integer not null default 1,
     price integer not null
 );
 
@@ -106,10 +107,10 @@ create function update_sale_total()
     returns trigger as $$
     begin
         if (TG_OP = 'DELETE') then
-            update sales set total = total - (select sum(price) from old_table where sale_id = sales.id)
+            update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id)
             where id in (select sale_id from old_table);
         elsif (TG_OP = 'UPDATE') then
-            update sales set total = total - (select sum(price) from old_table where sale_id = sales.id) + (select sum(price) from new_table where sale_id = sales.id)
+            update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id) + (select sum(price * count) from new_table where sale_id = sales.id)
             where id in (select sale_id from old_table);
         elsif (TG_OP = 'INSERT') then
             update sales set total = total + (select sum(price) from new_table where sale_id = sales.id)
