@@ -22,6 +22,8 @@ create trigger items_update_modified_at
     for each row
     execute function update_modified_at();
 
+create index items_modified_at_idx on items (modified_at);
+
 create table categories (
     id bigserial primary key,
     guid uuid not null default gen_random_uuid(),
@@ -34,6 +36,8 @@ create trigger categories_update_modified_at
     for each row
     execute function update_modified_at();
 
+create index categories_modified_at_idx on categories (modified_at);
+
 create table item_categories (
     id bigserial primary key,
     guid uuid not null default gen_random_uuid(),
@@ -43,6 +47,7 @@ create table item_categories (
     unique(item_id, category_id)
 );
 
+create index item_categories_modified_at_idx on item_categories (modified_at);
 create index item_categories_item_id_idx on item_categories (item_id);
 create index item_categories_category_id_idx on item_categories (category_id);
 
@@ -61,6 +66,8 @@ create trigger buyers_update_modified_at
     for each row
     execute function update_modified_at();
 
+create index buyers_modified_at_idx on buyers (modified_at);
+
 create table sales (
     id bigserial primary key,
     guid uuid not null default gen_random_uuid(),
@@ -76,6 +83,7 @@ create trigger sales_update_modified_at
     for each row
     execute function update_modified_at();
 
+create index sales_modified_at_idx on sales (modified_at);
 create index sales_buyer_id_idx on sales (buyer_id);
 
 alter table sales
@@ -88,7 +96,8 @@ create table sale_items (
     sale_id bigint not null,
     item_id bigint not null,
     count  integer not null default 1,
-    price integer not null
+    price integer not null,
+    unique(sale_id, item_id)
 );
 
 create trigger sale_items_update_modified_at
@@ -96,6 +105,7 @@ create trigger sale_items_update_modified_at
     for each row
     execute function update_modified_at();
 
+create index sale_items_modified_at_idx on sale_items (modified_at);
 create index sale_items_sale_id_idx on sale_items (sale_id);
 create index sale_items_item_id_idx on sale_items (item_id);
 
