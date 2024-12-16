@@ -1,13 +1,13 @@
-create database :dbname;
-\c :dbname
+create database :"dbname";
+\c :"dbname"
 
 create function update_modified_at()
-    returns trigger as $$
-    begin
-        NEW.modified_at = now();
-        return NEW;
-    end;
-    $$ language 'plpgsql';
+returns trigger as $$
+begin
+    NEW.modified_at = now();
+    return NEW;
+end;
+$$ language 'plpgsql';
 
 create table items (
     id bigserial primary key,
@@ -114,21 +114,21 @@ alter table sale_items
     add constraint sale_items_item_id_fk foreign key (item_id) references items (id);
 
 create function update_sale_total()
-    returns trigger as $$
-    begin
-        if (TG_OP = 'DELETE') then
-            update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id)
-            where id in (select sale_id from old_table);
-        elsif (TG_OP = 'UPDATE') then
-            update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id) + (select sum(price * count) from new_table where sale_id = sales.id)
-            where id in (select sale_id from old_table);
-        elsif (TG_OP = 'INSERT') then
-            update sales set total = total + (select sum(price) from new_table where sale_id = sales.id)
-            where id in (select sale_id from new_table);
-        end if;
-        return null;
-    end;
-    $$ language 'plpgsql';
+returns trigger as $$
+begin
+    if (TG_OP = 'DELETE') then
+        update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id)
+        where id in (select sale_id from old_table);
+    elsif (TG_OP = 'UPDATE') then
+        update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id) + (select sum(price * count) from new_table where sale_id = sales.id)
+        where id in (select sale_id from old_table);
+    elsif (TG_OP = 'INSERT') then
+        update sales set total = total + (select sum(price) from new_table where sale_id = sales.id)
+        where id in (select sale_id from new_table);
+    end if;
+    return null;
+end;
+$$ language 'plpgsql';
 
 create trigger update_sale_total_ins
     after insert on sale_items

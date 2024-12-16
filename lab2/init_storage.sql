@@ -3,7 +3,7 @@ create database storage;
 
 create table branches (
     id bigserial primary key,
-    name text not null,
+    name text not null unique,
     last_fetched_at timestamptz
 );
 
@@ -74,7 +74,7 @@ create table sales (
     id bigserial primary key,
     branch_id bigint not null,
     fetched_at timestamptz not null,
-    local_id timestamptz not null,
+    local_id bigint not null,
     guid uuid not null,
     modified_at timestamptz not null,
     created_at timestamptz not null,
@@ -93,7 +93,7 @@ create table sale_items (
     id bigserial primary key,
     branch_id bigint not null,
     fetched_at timestamptz not null,
-    local_id timestamptz not null,
+    local_id bigint not null,
     guid uuid not null,
     modified_at timestamptz not null,
     sale_id bigint not null,

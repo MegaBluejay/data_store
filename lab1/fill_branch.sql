@@ -1,4 +1,4 @@
-\c :dbname
+\c :"dbname"
 
 create temp table basic_cats (
   num int,
