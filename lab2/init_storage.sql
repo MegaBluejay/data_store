@@ -25,6 +25,8 @@ create table item_states (
     price integer not null
 );
 
+create index item_states_latest_idx on item_states (item_id, fetched_at);
+
 create table categories (
     id bigserial primary key,
     branch_id bigint not null,
@@ -40,6 +42,8 @@ create table category_states (
     modified_at timestamptz not null,
     name text not null
 );
+
+create index category_states_latest_idx on category_states (category_id, fetched_at);
 
 create table item_categories (
     id bigserial primary key,
@@ -58,6 +62,8 @@ create table item_category_states (
     category_id bigint not null
 );
 
+create index item_category_states_latest_idx on item_category_states (item_category_id, fetched_at);
+
 create table buyers (
     id bigserial primary key,
     branch_id bigint not null,
@@ -72,6 +78,8 @@ create table buyer_states (
     fetched_at timestamptz not null default now(),
     modified_at timestamptz not null not null
 );
+
+create index buyer_states_latest_idx on buyer_states (buyer_id, fetched_at);
 
 create table sales (
     id bigserial primary key,
@@ -92,6 +100,8 @@ create table sale_states (
     total integer not null
 );
 
+create index sale_states_latest_idx on sale_states (sale_id, fetched_at);
+
 create table sale_items (
     id bigserial primary key,
     branch_id bigint not null,
@@ -110,3 +120,5 @@ create table sale_item_states (
     count integer not null,
     price integer not null
 );
+
+create index sale_item_states_latest_idx on sale_item_states (sale_item_id, fetched_at);
