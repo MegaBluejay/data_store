@@ -20,6 +20,7 @@ create table item_states (
     id bigserial primary key,
     item_id bigint not null,
     fetched_at timestamptz not null default now(),
+    deleted_at timestamptz,
     modified_at timestamptz not null,
     name text not null,
     price integer not null
@@ -39,6 +40,7 @@ create table category_states (
     id bigserial primary key,
     category_id bigint not null,
     fetched_at timestamptz not null default now(),
+    deleted_at timestamptz,
     modified_at timestamptz not null,
     name text not null
 );
@@ -57,6 +59,7 @@ create table item_category_states (
     id bigserial primary key,
     item_category_id bigint not null,
     fetched_at timestamptz not null default now(),
+    deleted_at timestamptz,
     modified_at timestamptz not null,
     item_id bigint not null,
     category_id bigint not null
@@ -76,6 +79,7 @@ create table buyer_states (
     id bigserial primary key,
     buyer_id bigint not null,
     fetched_at timestamptz not null default now(),
+    deleted_at timestamptz,
     modified_at timestamptz not null not null
 );
 
@@ -93,6 +97,7 @@ create table sale_states (
     id bigserial primary key,
     sale_state_id bigint not null,
     fetched_at timestamptz not null default now(),
+    deleted_at timestamptz,
     modified_at timestamptz not null,
     created_at timestamptz not null,
     finalized_at timestamptz,
@@ -100,7 +105,7 @@ create table sale_states (
     total integer not null
 );
 
-create index sale_states_latest_idx on sale_states (sale_id, fetched_at);
+create index sale_states_latest_idx on sale_states (sale_state_id, fetched_at);
 
 create table sale_items (
     id bigserial primary key,
@@ -114,6 +119,7 @@ create table sale_item_states (
     id bigserial primary key,
     sale_item_id bigint not null,
     fetched_at timestamptz not null default now(),
+    deleted_at timestamptz,
     modified_at timestamptz not null,
     sale_id bigint not null,
     item_id bigint not null,

@@ -9,6 +9,21 @@ begin
 end;
 $$ language 'plpgsql';
 
+create function save_deleted()
+returns trigger as $func$
+begin
+    execute format(
+        $sql$
+        insert into %I
+        select *
+        from old_table
+        $sql$,
+        TG_ARGV[0]
+    );
+    return null;
+end;
+$func$ language 'plpgsql';
+
 create table items (
     id bigserial primary key,
     guid uuid not null default gen_random_uuid(),
@@ -24,6 +39,21 @@ create trigger items_update_modified_at
 
 create index items_modified_at_idx on items (modified_at);
 
+create table deleted_items (
+    id bigint primary key,
+    guid uuid not null,
+    modified_at timestamptz not null,
+    name text not null,
+    price integer not null,
+    deleted_at timestamptz not null default now()
+);
+
+create trigger items_save_deleted
+    after delete on items
+    referencing old table as old_table
+    for each statement
+    execute function save_deleted('deleted_items');
+
 create table categories (
     id bigserial primary key,
     guid uuid not null default gen_random_uuid(),
@@ -37,6 +67,20 @@ create trigger categories_update_modified_at
     execute function update_modified_at();
 
 create index categories_modified_at_idx on categories (modified_at);
+
+create table deleted_categories (
+    id bigint primary key,
+    guid uuid not null,
+    modified_at timestamptz not null,
+    name text not null,
+    deleted_at timestamptz not null default now()
+);
+
+create trigger categories_save_deleted
+    after delete on categories
+    referencing old table as old_table
+    for each statement
+    execute function save_deleted('deleted_categories');
 
 create table item_categories (
     id bigserial primary key,
@@ -55,6 +99,21 @@ alter table item_categories
     add constraint item_categories_item_id_fk foreign key (item_id) references items (id),
     add constraint item_categories_category_id_fk foreign key (category_id) references categories (id);
 
+create table deleted_item_categories (
+    id bigint primary key,
+    guid uuid not null,
+    modified_at timestamptz not null,
+    item_id bigint not null,
+    category_id bigint not null,
+    deleted_at timestamptz not null default now()
+);
+
+create trigger item_categories_save_deleted
+    after delete on item_categories
+    referencing old table as old_table
+    for each statement
+    execute function save_deleted('deleted_item_categories');
+
 create table buyers (
     id bigserial primary key,
     guid uuid not null default gen_random_uuid(),
@@ -67,6 +126,19 @@ create trigger buyers_update_modified_at
     execute function update_modified_at();
 
 create index buyers_modified_at_idx on buyers (modified_at);
+
+create table deleted_buyers (
+    id bigint primary key,
+    guid uuid not null,
+    modified_at timestamptz not null,
+    deleted_at timestamptz not null default now()
+);
+
+create trigger buyers_save_deleted
+    after delete on buyers
+    referencing old table as old_table
+    for each statement
+    execute function save_deleted('deleted_buyers');
 
 create table sales (
     id bigserial primary key,
@@ -88,6 +160,23 @@ create index sales_buyer_id_idx on sales (buyer_id);
 
 alter table sales
     add constraint sales_buyer_id_fk foreign key (buyer_id) references buyers (id);
+
+create table deleted_sales (
+    id bigint primary key,
+    guid uuid not null,
+    modified_at timestamptz not null,
+    created_at timestamptz not null,
+    finalized_at timestamptz,
+    buyer_id bigint not null,
+    total integer not null,
+    deleted_at timestamptz not null default now()
+);
+
+create trigger sales_save_deleted
+    after delete on sales
+    referencing old table as old_table
+    for each statement
+    execute function save_deleted('deleted_sales');
 
 create table sale_items (
     id bigserial primary key,
@@ -141,3 +230,20 @@ create trigger update_sale_total_del
     after delete on sale_items
     referencing old table as old_table
     for each statement execute function update_sale_total();
+
+create table deleted_sale_items (
+    id bigint primary key,
+    guid uuid not null,
+    modified_at timestamptz not null,
+    sale_id bigint not null,
+    item_id bigint not null,
+    count  integer not null,
+    price integer not null,
+    deleted_at timestamptz not null default now()
+);
+
+create trigger sale_items_save_deleted
+    after delete on sale_items
+    referencing old table as old_table
+    for each statement
+    execute function save_deleted('deleted_sale_items');
