@@ -1,5 +1,5 @@
-create database :"dbname";
-\c :"dbname"
+create database :"branch";
+\c :"branch"
 
 create function update_modified_at()
 returns trigger as $$
@@ -96,8 +96,7 @@ create table sale_items (
     sale_id bigint not null,
     item_id bigint not null,
     count  integer not null default 1,
-    price integer not null,
-    unique(sale_id, item_id)
+    price integer not null
 );
 
 create trigger sale_items_update_modified_at

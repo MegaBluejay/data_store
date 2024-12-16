@@ -32,125 +32,185 @@ returns void as $func$
 begin
     execute format(
         $sql$
-        insert into public.items (
-            branch_id,
-            fetched_at,
-            local_id,
-            guid,
+        with updates as (
+            select *
+            from %1$I.items
+            where
+                case
+                when $2 is null
+                then true
+                else modified_at > $2
+                end
+        ), new_items as (
+            insert into public.items (
+                branch_id,
+                local_id,
+                guid
+            )
+            select $1, id, guid
+            from updates
+            on conflict do nothing
+            returning id, local_id
+        ), link as (
+            select id, local_id from new_items
+            union all
+            select i.id, i.local_id from updates u
+            join public.items i on i.branch_id = $1 and i.local_id = u.id
+        )
+        insert into public.item_states (
+            item_id,
             modified_at,
             name,
             price
         )
         select
-            $1,
-            now(),
-            i.id,
-            guid,
+            l.id,
             modified_at,
             name,
             price
-        from %1$I.items i
-        where
-            case
-            when $2 is null
-            then true
-            else modified_at > $2
-            end;
-        
-        insert into public.categories (
-            branch_id,
-            fetched_at,
-            local_id,
-            guid,
-            modified_at,
-            name
-        )
-        select
-            $1,
-            now(),
-            c.id,
-            guid,
-            modified_at,
-            name
-        from %1$I.categories c
-        where
-            case
-            when $2 is null
-            then true
-            else modified_at > $2
-            end;
+        from updates u
+        join link l on u.id = l.local_id;
 
-        insert into public.item_categories (
-            branch_id,
-            fetched_at,
-            local_id,
-            guid,
+        with updates as (
+            select *
+            from %1$I.categories
+            where
+                case
+                when $2 is null
+                then true
+                else modified_at > $2
+                end
+        ), new_categories as (
+            insert into public.categories (
+                branch_id,
+                local_id,
+                guid
+            )
+            select $1, id, guid
+            from updates
+            on conflict do nothing
+            returning id, local_id
+        ), link as (
+            select id, local_id from new_categories
+            union all
+            select c.id, c.local_id from updates u
+            join public.categories c on c.branch_id = $1 and c.local_id = u.id
+        )
+        insert into public.category_states (
+            category_id,
+            modified_at,
+            name
+        )
+        select
+            l.id,
+            modified_at,
+            name
+        from updates u
+        join link l on u.id = l.local_id;
+
+        with updates as (
+            select *
+            from %1$I.item_categories
+            where
+                case
+                when $2 is null
+                then true
+                else modified_at > $2
+                end
+        ), new_item_categories as (
+            insert into public.item_categories (
+                branch_id,
+                local_id,
+                guid
+            )
+            select $1, id, guid
+            from updates
+            on conflict do nothing
+            returning id, local_id
+        ), link as (
+            select id, local_id from new_item_categories
+            union all
+            select ic.id, ic.local_id from updates u
+            join public.item_categories ic on ic.branch_id = $1 and ic.local_id = u.id
+        )
+        insert into public.item_category_states (
+            item_category_id,
             modified_at,
             item_id,
             category_id
         )
         select
-            $1,
-            now(),
-            ic.id,
-            guid,
+            l.id,
             modified_at,
-            li.id,
-            lc.id
-        from %1$I.item_categories ic
-        , lateral (
-            select id
-            from public.items
+            i.id,
+            c.id
+        from updates u
+        join link l on u.id = l.local_id
+        join public.items i on i.branch_id = $1 and i.local_id = u.item_id
+        join public.categories c on c.branch_id = $1 and c.local_id = u.category_id;
+
+        with updates as (
+            select *
+            from %1$I.buyers
             where
-                branch_id = $1
-                and
-                local_id = ic.item_id
-            order by id desc
-            limit 1
-        ) li
-        , lateral (
-            select id
-            from public.categories
-            where
-                branch_id = $1
-                and
-                local_id = ic.category_id
-            order by id desc
-            limit 1
-        ) lc
-        where
-            case
-            when $2 is null
-            then true
-            else modified_at > $2
-            end;
-        
-        insert into public.buyers (
-            branch_id,
-            fetched_at,
-            local_id,
-            guid,
+                case
+                when $2 is null
+                then true
+                else modified_at > $2
+                end
+        ), new_buyers as (
+            insert into public.buyers (
+                branch_id,
+                local_id,
+                guid
+            )
+            select $1, id, guid
+            from updates
+            on conflict do nothing
+            returning id, local_id
+        ), link as (
+            select id, local_id from new_buyers
+            union all
+            select b.id, b.local_id from updates u
+            join public.buyers b on b.branch_id = $1 and b.local_id = u.id
+        )
+        insert into public.buyer_states (
+            buyer_id,
             modified_at
         )
         select
-            $1,
-            now(),
-            id,
-            guid,
+            l.id,
             modified_at
-        from %1$I.buyers
-        where
-            case
-            when $2 is null
-            then true
-            else modified_at > $2
-            end;
-        
-        insert into public.sales (
-            branch_id,
-            fetched_at,
-            local_id,
-            guid,
+        from updates u
+        join link l on u.id = l.local_id;
+
+        with updates as (
+            select *
+            from %1$I.sales
+            where
+                case
+                when $2 is null
+                then true
+                else modified_at > $2
+                end
+        ), new_sales as (
+            insert into public.sales (
+                branch_id,
+                local_id,
+                guid
+            )
+            select $1, id, guid
+            from updates
+            on conflict do nothing
+            returning id, local_id
+        ), link as (
+            select id, local_id from new_sales
+            union all
+            select s.id, s.local_id from updates u
+            join public.sales s on s.branch_id = $1 and s.local_id = u.id
+        )
+        insert into public.sale_states (
+            sale_state_id,
             modified_at,
             created_at,
             finalized_at,
@@ -158,38 +218,43 @@ begin
             total
         )
         select
-            $1,
-            now(),
-            s.id,
-            guid,
+            l.id,
             modified_at,
             created_at,
             finalized_at,
-            lb.id,
+            b.id,
             total
-        from %1$I.sales s
-        , lateral (
-            select id
-            from public.buyers
+        from updates u
+        join link l on u.id = l.local_id
+        join public.buyers b on b.branch_id = $1 and b.local_id = u.buyer_id;
+
+        with updates as (
+            select *
+            from %1$I.sale_items
             where
-                branch_id = $1
-                and
-                local_id = s.buyer_id
-            order by id desc
-            limit 1
-        ) lb
-        where
-            case
-            when $2 is null
-            then true
-            else modified_at > $2
-            end;
-        
-        insert into public.sale_items (
-            branch_id,
-            fetched_at,
-            local_id,
-            guid,
+                case
+                when $2 is null
+                then true
+                else modified_at > $2
+                end
+        ), new_sale_items as (
+            insert into public.sale_items (
+                branch_id,
+                local_id,
+                guid
+            )
+            select $1, id, guid
+            from updates
+            on conflict do nothing
+            returning id, local_id
+        ), link as (
+            select id, local_id from new_sale_items
+            union all
+            select si.id, si.local_id from updates u
+            join public.sale_items si on si.branch_id = $1 and si.local_id = u.id
+        )
+        insert into public.sale_item_states (
+            sale_item_id,
             modified_at,
             sale_id,
             item_id,
@@ -197,44 +262,20 @@ begin
             price
         )
         select
-            $1,
-            now(),
-            si.id,
-            guid,
+            l.id,
             modified_at,
-            ls.id,
-            li.id,
+            s.id,
+            i.id,
             count,
             price
-        from %1$I.sale_items si
-        , lateral (
-            select id
-            from public.sales
-            where
-                branch_id = $1
-                and
-                local_id = si.sale_id
-            order by id desc
-            limit 1
-        ) ls, lateral (
-            select id
-            from public.items
-            where
-                branch_id = $1
-                and
-                local_id = si.item_id
-            order by id desc
-            limit 1
-        ) li
-        where
-            case
-            when $2 is null
-            then true
-            else modified_at > $2
-            end;
+        from updates u
+        join link l on l.local_id = u.id
+        join public.sales s on s.branch_id = $1 and s.local_id = u.sale_id
+        join public.items i on i.branch_id = $1 and i.local_id = u.item_id;
         $sql$,
         branch.name
     ) using branch.id, branch.last_fetched_at;
+
     update public.branches
     set last_fetched_at = now()
     where id = branch.id;

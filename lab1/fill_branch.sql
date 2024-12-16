@@ -1,4 +1,4 @@
-\c :"dbname"
+\c :"branch"
 
 create temp table basic_cats (
   num int,
