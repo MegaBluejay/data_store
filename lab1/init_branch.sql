@@ -247,25 +247,3 @@ create trigger sale_items_save_deleted
     referencing old table as old_table
     for each statement
     execute function save_deleted('deleted_sale_items');
-
-create function reset_seqs()
-returns void as $$
-select setval('public.items_id_seq', (
-    select max(id) from public.items
-));
-select setval('public.categories_id_seq', (
-    select max(id) from public.categories
-));
-select setval('public.item_categories_id_seq', (
-    select max(id) from public.item_categories
-));
-select setval('public.buyers_id_seq', (
-    select max(id) from public.buyers
-));
-select setval('public.sales_id_seq', (
-    select max(id) from public.sales
-));
-select setval('public.sale_items_id_seq', (
-    select max(id) from public.sale_items
-));
-$$ language 'sql';

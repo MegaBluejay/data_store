@@ -170,5 +170,67 @@ begin
         $sql$,
         branch.name
     ) using branch.id;
+
+    perform dblink_connect(branch.name, branch.name);
+
+    perform from dblink(
+        branch.name,
+        format(
+            $sql$
+            select setval('public.items_id_seq', %L)
+            $sql$,
+            (select max(local_id) from public.items where branch_id = branch.id)
+        )
+    ) x(setval bigint);
+
+    perform from dblink(
+        branch.name,
+        format(
+            $sql$
+            select setval('public.categories_id_seq', %L)
+            $sql$,
+            (select max(local_id) from public.categories where branch_id = branch.id)
+        )
+    ) x(setval bigint);
+
+    perform from dblink(
+        branch.name,
+        format(
+            $sql$
+            select setval('public.item_categories_id_seq', %L)
+            $sql$,
+            (select max(local_id) from public.item_categories where branch_id = branch.id)
+        )
+    ) x(setval bigint);
+
+    perform from dblink(
+        branch.name,
+        format(
+            $sql$
+            select setval('public.buyers_id_seq', %L)
+            $sql$,
+            (select max(local_id) from public.buyers where branch_id = branch.id)
+        )
+    ) x(setval bigint);
+
+    perform from dblink(
+        branch.name,
+        format(
+            $sql$
+            select setval('public.sales_id_seq', %L)
+            $sql$,
+            (select max(local_id) from public.sales where branch_id = branch.id)
+        )
+    ) x(setval bigint);
+
+    perform from dblink(
+        branch.name,
+        format(
+            $sql$
+            select setval('public.sale_items_id_seq', %L)
+            $sql$,
+            (select max(local_id) from public.sale_items where branch_id = branch.id)
+        )
+    ) x(setval bigint);
 end;
 $func$ language 'plpgsql';
