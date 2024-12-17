@@ -205,13 +205,13 @@ create function update_sale_total()
 returns trigger as $$
 begin
     if (TG_OP = 'DELETE') then
-        update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id)
+        update public.sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id)
         where id in (select sale_id from old_table);
     elsif (TG_OP = 'UPDATE') then
-        update sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id) + (select sum(price * count) from new_table where sale_id = sales.id)
+        update public.sales set total = total - (select sum(price * count) from old_table where sale_id = sales.id) + (select sum(price * count) from new_table where sale_id = sales.id)
         where id in (select sale_id from old_table);
     elsif (TG_OP = 'INSERT') then
-        update sales set total = total + (select sum(price * count) from new_table where sale_id = sales.id)
+        update public.sales set total = total + (select sum(price * count) from new_table where sale_id = sales.id)
         where id in (select sale_id from new_table);
     end if;
     return null;
@@ -247,3 +247,25 @@ create trigger sale_items_save_deleted
     referencing old table as old_table
     for each statement
     execute function save_deleted('deleted_sale_items');
+
+create function reset_seqs()
+returns void as $$
+select setval('public.items_id_seq', (
+    select max(id) from public.items
+));
+select setval('public.categories_id_seq', (
+    select max(id) from public.categories
+));
+select setval('public.item_categories_id_seq', (
+    select max(id) from public.item_categories
+));
+select setval('public.buyers_id_seq', (
+    select max(id) from public.buyers
+));
+select setval('public.sales_id_seq', (
+    select max(id) from public.sales
+));
+select setval('public.sale_items_id_seq', (
+    select max(id) from public.sale_items
+));
+$$ language 'sql';

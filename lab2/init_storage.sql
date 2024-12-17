@@ -95,7 +95,7 @@ create table sales (
 
 create table sale_states (
     id bigserial primary key,
-    sale_state_id bigint not null,
+    sale_id bigint not null,
     fetched_at timestamptz not null default now(),
     deleted_at timestamptz,
     modified_at timestamptz not null,
@@ -105,7 +105,7 @@ create table sale_states (
     total integer not null
 );
 
-create index sale_states_latest_idx on sale_states (sale_state_id, fetched_at);
+create index sale_states_latest_idx on sale_states (sale_id, fetched_at);
 
 create table sale_items (
     id bigserial primary key,

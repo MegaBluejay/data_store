@@ -1,6 +1,6 @@
 \c storage
 
-create or replace function fetch_new(branch public.branches)
+create function fetch_new(branch public.branches)
 returns void as $func$
 begin
     execute format(
@@ -214,7 +214,7 @@ begin
             join public.sales s on s.branch_id = $1 and s.local_id = u.id
         )
         insert into public.sale_states (
-            sale_state_id,
+            sale_id,
             deleted_at,
             modified_at,
             created_at,

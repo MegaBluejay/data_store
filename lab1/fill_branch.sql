@@ -5,14 +5,14 @@ create temp table basic_cats (
   name text
 );
 
-\copy basic_cats(num, name) from 'basic_cats.csv' delimiter ',' csv
+\copy basic_cats(num, name) from 'lab1/basic_cats.csv' delimiter ',' csv
 
 create temp table temp_items (
   cat_num int,
   name text
 );
 
-\copy temp_items(cat_num, name) from 'items.csv' delimiter ',' csv
+\copy temp_items(cat_num, name) from 'lab1/items.csv' delimiter ',' csv
 
 insert into items (name, price)
 select name, ceil(random() * 100)
