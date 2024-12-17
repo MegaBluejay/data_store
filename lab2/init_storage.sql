@@ -135,6 +135,7 @@ create table sale_states (
 );
 
 create index sale_states_latest_idx on sale_states (sale_id, fetched_at);
+create index sale_states_deleted_at_finalized_at_idx on sale_states (deleted_at, finalized_at);
 
 alter table sale_states
     add constraint sale_states_sale_id_fk foreign key (sale_id) references sales (id),

@@ -161,6 +161,21 @@ create index sales_buyer_id_idx on sales (buyer_id);
 alter table sales
     add constraint sales_buyer_id_fk foreign key (buyer_id) references buyers (id);
 
+create function check_sale_not_finalized()
+returns trigger as $$
+begin
+    if (OLD.finalized_at is not null) then
+        raise exception 'sale % finalized', OLD.id;
+    end if;
+    return NEW;
+end;
+$$ language 'plpgsql';
+
+create trigger sale_check_not_finalized
+    before update on items
+    for each row
+    execute function check_sale_not_finalized();
+
 create table deleted_sales (
     id bigint primary key,
     guid uuid not null,
