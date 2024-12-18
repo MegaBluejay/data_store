@@ -5,11 +5,22 @@ select id, name
 from storage.branches
 on conflict do nothing;
 
-insert into weeks (start)
-select start
-from generate_series(date_trunc('week', :'start'::timestamptz), date_trunc('week', :'end'::timestamptz), '1 week'::interval) starts(start)
-on conflict do nothing;
-
+with starts as (
+    select * from
+    generate_series(date_trunc('week', :'start'::timestamptz), date_trunc('week', :'end'::timestamptz), '1 week'::interval) starts(start)
+), new_weeks as (
+    insert into weeks (start)
+    select start
+    from starts
+    on conflict do nothing
+    returning id, start
+), all_weeks as (
+    select w.id, w.start
+    from starts s
+    join weeks w on s.start = w.start
+    union all
+    select * from new_weeks
+)
 insert into sale_totals (
     week_id,
     branch_id,
@@ -19,8 +30,7 @@ select
     w.id,
     b.id,
     coalesce(gs.total, 0)
-from generate_series(date_trunc('week', :'start'::timestamptz), date_trunc('week', :'end'::timestamptz), '1 week'::interval) starts(start)
-join weeks w on w.start = starts.start
+from all_weeks w
 cross join branches b
 left join (
     select
