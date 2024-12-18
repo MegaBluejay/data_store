@@ -25,16 +25,19 @@ cross join branches b
 left join (
     select
         s.branch_id,
-        date_bin('1 week'::interval, ss.finalized_at, date_trunc('week', :'start'::timestamptz)) start,
-        sum(ss.total) total
-    from storage.sale_states ss
-    join storage.sales s on s.id = ss.sale_id
-    where
-        date_trunc('week', :'start'::timestamptz) <= ss.finalized_at
-        and
-        ss.finalized_at < date_trunc('week', :'end'::timestamptz)
-        and
-        deleted_at is null
+        date_bin('1 week'::interval, ls.finalized_at, date_trunc('week', :'start'::timestamptz)) start,
+        sum(ls.total) total
+    from (
+        select distinct on (sale_id)
+            *
+        from storage.sale_states
+        where
+            date_trunc('week', :'start'::timestamptz) <= finalized_at
+            and
+            finalized_at < date_trunc('week', :'end'::timestamptz)
+        order by sale_id
+    ) ls
+    join storage.sales s on s.id = ls.sale_id
     group by 1, 2
 ) gs on gs.branch_id = b.id and gs.start = w.start
 on conflict (week_id, branch_id) do update
